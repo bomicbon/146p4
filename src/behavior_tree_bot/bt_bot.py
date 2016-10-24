@@ -6,9 +6,15 @@
 // starting point, or you can throw it out entirely and replace it with your
 // own.
 """
-import logging, traceback, sys, os, inspect
-logging.basicConfig(filename=__file__[:-3] +'.log', filemode='w', level=logging.DEBUG)
-currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+import logging
+import traceback
+import sys
+import os
+import inspect
+logging.basicConfig(
+    filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
+currentdir = os.path.dirname(os.path.abspath(
+    inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 
@@ -20,6 +26,8 @@ from planet_wars import PlanetWars, finish_turn
 
 # You have to improve this tree or create an entire new one that is capable
 # of winning against all the 5 opponent bots
+
+
 def setup_behavior_tree():
 
     # Top-down construction of behavior tree
@@ -33,19 +41,35 @@ def setup_behavior_tree():
     spread_sequence = Sequence(name='Spread Strategy')
     neutral_planet_check = Check(if_neutral_planet_available)
     spread_action = Action(spread_to_weakest_neutral_planet)
-    spread_sequence.child_nodes = [neutral_planet_check, spread_action]
+    spread_candy = Action(take_candy)
+    spread_sequence.child_nodes = [
+        neutral_planet_check, spread_action, spread_candy]
 
-    root.child_nodes = [offensive_plan, spread_sequence, attack.copy()]
+    defensive_plan = Sequence(name='Defensive Strategy')
+    if_attacked_check = Check(if_attacked)
+    planet_defense = Action(defend_planet)
+    defensive_plan.child_nodes = [if_attacked_check, planet_defense]
+
+    colony_policy = Sequence(name='Interception Strategy')
+    if_neutral_lost = Check(neutral_lost)
+    colony_steal = Action(steal_colony)
+    colony_policy.child_nodes = [if_neutral_lost, colony_steal]
+
+    root.child_nodes = [offensive_plan,
+                        spread_sequence, defensive_plan, attack.copy()]
 
     logging.info('\n' + root.tree_to_string())
     return root
 
 # You don't need to change this function
+
+
 def do_turn(state):
     behavior_tree.execute(planet_wars)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
+    logging.basicConfig(
+        filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
 
     behavior_tree = setup_behavior_tree()
     try:
