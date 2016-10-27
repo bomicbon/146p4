@@ -17,7 +17,6 @@ currentdir = os.path.dirname(os.path.abspath(
     inspect.getfile(inspect.currentframe())))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
-
 from behavior_tree_bot.behaviors import *
 from behavior_tree_bot.checks import *
 from behavior_tree_bot.bt_nodes import Selector, Sequence, Action, Check
@@ -29,7 +28,6 @@ from planet_wars import PlanetWars, finish_turn
 
 
 def setup_behavior_tree():
-
     # Top-down construction of behavior tree
     root = Selector(name='High Level Ordering of Strategies')
 
@@ -41,24 +39,34 @@ def setup_behavior_tree():
     spread_sequence = Sequence(name='Spread Strategy')
     neutral_planet_check = Check(if_neutral_planet_available)
     spread_action = Action(spread_to_weakest_neutral_planet)
-    spread_candy = Action(take_candy)
-    spread_sequence.child_nodes = [
-        neutral_planet_check, spread_action, spread_candy]
+    spread_sequence.child_nodes = [neutral_planet_check, spread_action]
 
-    defensive_plan = Sequence(name='Defensive Strategy')
-    if_attacked_check = Check(if_attacked)
-    planet_defense = Action(defend_planet)
-    defensive_plan.child_nodes = [if_attacked_check, planet_defense]
-
-    colony_policy = Sequence(name='Interception Strategy')
-    if_neutral_lost = Check(neutral_lost)
-    colony_steal = Action(steal_colony)
-    colony_policy.child_nodes = [if_neutral_lost, colony_steal]
-
-    root.child_nodes = [offensive_plan,
-                        spread_sequence, defensive_plan, attack.copy()]
+    root.child_nodes = [offensive_plan, spread_sequence, attack.copy()]
 
     logging.info('\n' + root.tree_to_string())
+    return root
+
+
+def setup_my_tree():
+    root = Selector()
+
+    initialDeployment = Sequence()
+    startCheck = Check(starter)
+    myFleetCheck = Check(myFleets)
+    gotoclosestFour = Action(closestFour)
+    initialDeployment.child_nodes = [startCheck, myFleetCheck, gotoclosestFour]
+
+    # need to add some kind of defense sequence
+    # it isn't necessarilly needed, but would reduce the amount
+
+    productionSequence = Sequence()
+    above100Check = Check(above100)
+    attackWith100 = Action(attack100)
+    productionSequence.child_nodes = [above100Check, attackWith100]
+
+    root.child_nodes = [initialDeployment, productionSequence]
+    logging.info('\n' + root.tree_to_string())
+    print(root.tree_to_string())
     return root
 
 # You don't need to change this function
@@ -70,8 +78,7 @@ def do_turn(state):
 if __name__ == '__main__':
     logging.basicConfig(
         filename=__file__[:-3] + '.log', filemode='w', level=logging.DEBUG)
-
-    behavior_tree = setup_behavior_tree()
+    behavior_tree = setup_my_tree()
     try:
         map_data = ''
         while True:

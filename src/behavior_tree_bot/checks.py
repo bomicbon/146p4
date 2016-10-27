@@ -11,17 +11,27 @@ def have_largest_fleet(state):
         + sum(fleet.num_ships for fleet in state.enemy_fleets())
 
 
+def starter(state):
+    startingPlanet = state.my_planets()
+    return len(startingPlanet) < 2
+
+
+def myFleets(state):
+    f = [fleet for fleet in state.my_fleets()]
+    if not f:
+        return True
+    else:
+        return False
+
+
+def above100(state):
+    temp = [p for p in state.my_planets() if p.num_ships >= 100]
+    return len(temp) > 0
+
+
 def if_attacked(state):
-    return len(state.enemy_fleets()) > 0
-
-
-def neutral_lost(state):
-    for t in state.enemy_fleets():
-        if t.destination_planet in state.neutral_planets():
-            # Is enemy fleet big enough to take over?
-            target = t.destination_planet
-            if t.num_ships > target.num_ships:
-                return True
-            else:
-                pass
-    return False
+    e_size = len(state.enemy_fleets())
+    if e_size > 0:
+        return True
+    else:
+        return False
